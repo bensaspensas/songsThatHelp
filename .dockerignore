@@ -1,8 +1,8 @@
 bin/
 obj/
-*.user
-.vs/
+.git/
 .vscode/
+.vs/
+*.user
 *.suo
-*.cache
 .DS_Store

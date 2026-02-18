@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -10,10 +9,6 @@ using SongsThatHelp.Infrastructure.Services;
 using SongsThatHelp.Presentation.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Configure for Railway deployment - use PORT environment variable and listen on all interfaces
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "your-secret-key-min-32-chars-long!";
 var issuer = builder.Configuration["Jwt:Issuer"] ?? "SongsThatHelp";
