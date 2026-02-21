@@ -17,10 +17,8 @@ Console.Error.WriteLine($"=== ALL ENVIRONMENT VARIABLES ===");
 foreach (System.Collections.DictionaryEntry env in Environment.GetEnvironmentVariables())
 {
     var key = env.Key.ToString();
-    if (key.Contains("DATA") || key.Contains("POSTGRES") || key.Contains("DB"))
-    {
-        Console.Error.WriteLine($"{key}: {env.Value}");
-    }
+    Console.Error.WriteLine($"{key}: {env.Value}");
+
 }
 Console.Error.WriteLine($"=================================");
 
