@@ -2,8 +2,10 @@ namespace SongsThatHelp.Domain.Entities;
 
 public class User
 {
-    public string Username { get; private set; }
-    public string PasswordHash { get; private set; }
+    public string Username { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
+
+    public User() { }
 
     public User(string username, string passwordHash)
     {
@@ -11,3 +13,4 @@ public class User
         PasswordHash = passwordHash;
     }
 }
+

@@ -1,14 +1,50 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SongsThatHelp.Application.Services;
 using SongsThatHelp.Domain.Repositories;
+using SongsThatHelp.Infrastructure.Data;
 using SongsThatHelp.Infrastructure.Repositories;
 using SongsThatHelp.Infrastructure.Services;
 using SongsThatHelp.Presentation.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure PostgreSQL
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+
+if (!string.IsNullOrEmpty(connectionString))
+{
+    // Railway provides DATABASE_URL in a specific format, convert if needed
+    if (connectionString.StartsWith("postgres://"))
+    {
+        connectionString = connectionString.Replace("postgres://", "");
+        var parts = connectionString.Split('@');
+        var credentials = parts[0].Split(':');
+        var hostAndDb = parts[1].Split('/');
+        var hostAndPort = hostAndDb[0].Split(':');
+        
+        connectionString = $"Host={hostAndPort[0]};Port={hostAndPort[1]};Database={hostAndDb[1]};Username={credentials[0]};Password={credentials[1]};SSL Mode=Require;Trust Server Certificate=true";
+    }
+    
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseNpgsql(connectionString));
+    
+    builder.Services.AddScoped<IUserRepository, EfUserRepository>();
+    builder.Services.AddScoped<ISongRepository, EfSongRepository>();
+}
+else
+{
+    // Fallback to in-memory for local development
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseInMemoryDatabase("SongsDb"));
+    
+    builder.Services.AddScoped<IUserRepository, EfUserRepository>();
+    builder.Services.AddScoped<ISongRepository, EfSongRepository>();
+}
 
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "your-secret-key-min-32-chars-long!";
 var issuer = builder.Configuration["Jwt:Issuer"] ?? "SongsThatHelp";
@@ -79,16 +115,19 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Register repositories
-builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
-builder.Services.AddSingleton<ISongRepository, InMemorySongRepository>();
-
 // Register services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISongService, SongService>();
 
 var app = builder.Build();
+
+// Run migrations automatically
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 // Enable CORS
 app.UseCors();

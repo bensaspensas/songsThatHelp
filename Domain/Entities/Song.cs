@@ -2,16 +2,21 @@ namespace SongsThatHelp.Domain.Entities;
 
 public class Song
 {
-    public int Id { get; private set; }
-    public string Username { get; private set; }
-    public string Link { get; private set; }
-    public string Text { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+    public int Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Link { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
     private readonly List<Comment> _comments = new();
     private readonly List<Emoji> _emojis = new();
 
     public IReadOnlyList<Comment> Comments => _comments.AsReadOnly();
     public IReadOnlyList<Emoji> Emojis => _emojis.AsReadOnly();
+
+    public Song() 
+    {
+        CreatedAt = DateTime.UtcNow;
+    }
 
     public Song(int id, string username, string link, string text)
     {
@@ -38,10 +43,15 @@ public class Song
 
 public class Comment
 {
-    public int Id { get; private set; }
-    public string Username { get; private set; }
-    public string Text { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+    public int Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+
+    public Comment()
+    {
+        CreatedAt = DateTime.UtcNow;
+    }
 
     public Comment(int id, string username, string text)
     {
@@ -54,8 +64,10 @@ public class Comment
 
 public class Emoji
 {
-    public string Username { get; private set; }
-    public string EmojiType { get; private set; }
+    public string Username { get; set; } = string.Empty;
+    public string EmojiType { get; set; } = string.Empty;
+
+    public Emoji() { }
 
     public Emoji(string username, string emojiType)
     {
