@@ -13,12 +13,17 @@ using SongsThatHelp.Presentation.Endpoints;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure PostgreSQL
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+var configConnection = builder.Configuration.GetConnectionString("DefaultConnection");
 
-Console.WriteLine($"DATABASE_URL env var: {Environment.GetEnvironmentVariable("DATABASE_URL") ?? "null"}");
-Console.WriteLine($"Connection string from config: {builder.Configuration.GetConnectionString("DefaultConnection") ?? "null"}");
-Console.WriteLine($"Final connection string found: {!string.IsNullOrEmpty(connectionString)}");
+Console.Error.WriteLine($"=== DATABASE CONNECTION DEBUG ===");
+Console.Error.WriteLine($"DATABASE_URL env var: {databaseUrl ?? "NULL"}");
+Console.Error.WriteLine($"Config connection: {configConnection ?? "NULL"}");
+
+var connectionString = databaseUrl ?? configConnection;
+
+Console.Error.WriteLine($"Final connection string: {(string.IsNullOrEmpty(connectionString) ? "NULL" : "FOUND")}");
+Console.Error.WriteLine($"=================================");
 
 if (!string.IsNullOrEmpty(connectionString))
 {
