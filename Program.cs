@@ -16,11 +16,14 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? Environment.GetEnvironmentVariable("DATABASE_URL");
 
+Console.WriteLine($"Connection string found: {!string.IsNullOrEmpty(connectionString)}");
+
 if (!string.IsNullOrEmpty(connectionString))
 {
     // Railway provides DATABASE_URL in a specific format, convert if needed
     if (connectionString.StartsWith("postgres://"))
     {
+        Console.WriteLine("Converting postgres:// URL to Npgsql format");
         connectionString = connectionString.Replace("postgres://", "");
         var parts = connectionString.Split('@');
         var credentials = parts[0].Split(':');
@@ -28,6 +31,7 @@ if (!string.IsNullOrEmpty(connectionString))
         var hostAndPort = hostAndDb[0].Split(':');
         
         connectionString = $"Host={hostAndPort[0]};Port={hostAndPort[1]};Database={hostAndDb[1]};Username={credentials[0]};Password={credentials[1]};SSL Mode=Require;Trust Server Certificate=true";
+        Console.WriteLine("Using PostgreSQL database");
     }
     
     builder.Services.AddDbContext<AppDbContext>(options =>
@@ -38,6 +42,7 @@ if (!string.IsNullOrEmpty(connectionString))
 }
 else
 {
+    Console.WriteLine("No connection string found, using in-memory database");
     // Fallback to in-memory for local development
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseInMemoryDatabase("SongsDb"));
