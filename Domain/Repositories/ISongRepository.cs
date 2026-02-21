@@ -7,6 +7,7 @@ public interface ISongRepository
     Song? GetById(int id);
     List<Song> GetAll();
     void Add(Song song);
+    void Update(Song song);
     int GetNextId();
     int GetNextCommentId();
 }

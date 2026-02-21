@@ -30,6 +30,12 @@ public class EfSongRepository : ISongRepository
         _context.SaveChanges();
     }
 
+    public void Update(Song song)
+    {
+        _context.Songs.Update(song);
+        _context.SaveChanges();
+    }
+
     public int GetNextId()
     {
         return _context.Songs.Any() ? _context.Songs.Max(s => s.Id) + 1 : 1;

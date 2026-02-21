@@ -24,6 +24,11 @@ public class InMemorySongRepository : ISongRepository
         _songs.Add(song);
     }
 
+    public void Update(Song song)
+    {
+        // In-memory doesn't need explicit update since objects are already in memory
+    }
+
     public int GetNextId()
     {
         return _nextSongId++;

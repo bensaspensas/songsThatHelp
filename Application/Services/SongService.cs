@@ -36,7 +36,9 @@ public class SongService : ISongService
         if (song == null) return null;
 
         var commentId = _songRepository.GetNextCommentId();
-        return song.AddComment(commentId, username, text);
+        var comment = song.AddComment(commentId, username, text);
+        _songRepository.Update(song);
+        return comment;
     }
 
     public bool AddEmoji(int songId, string username, string emojiType)
@@ -45,6 +47,7 @@ public class SongService : ISongService
         if (song == null) return false;
 
         song.AddEmoji(username, emojiType);
+        _songRepository.Update(song);
         return true;
     }
 }
