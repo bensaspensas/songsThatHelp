@@ -13,17 +13,26 @@ using SongsThatHelp.Presentation.Endpoints;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure PostgreSQL
+Console.Error.WriteLine($"=== ALL ENVIRONMENT VARIABLES ===");
+foreach (System.Collections.DictionaryEntry env in Environment.GetEnvironmentVariables())
+{
+    var key = env.Key.ToString();
+    if (key.Contains("DATA") || key.Contains("POSTGRES") || key.Contains("DB"))
+    {
+        Console.Error.WriteLine($"{key}: {env.Value}");
+    }
+}
+Console.Error.WriteLine($"=================================");
+
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 var configConnection = builder.Configuration.GetConnectionString("DefaultConnection");
 
-Console.Error.WriteLine($"=== DATABASE CONNECTION DEBUG ===");
 Console.Error.WriteLine($"DATABASE_URL env var: {databaseUrl ?? "NULL"}");
 Console.Error.WriteLine($"Config connection: {configConnection ?? "NULL"}");
 
 var connectionString = databaseUrl ?? configConnection;
 
 Console.Error.WriteLine($"Final connection string: {(string.IsNullOrEmpty(connectionString) ? "NULL" : "FOUND")}");
-Console.Error.WriteLine($"=================================");
 
 if (!string.IsNullOrEmpty(connectionString))
 {
