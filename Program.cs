@@ -122,11 +122,19 @@ builder.Services.AddScoped<ISongService, SongService>();
 
 var app = builder.Build();
 
-// Run migrations automatically
+// Run migrations automatically (only for relational databases)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    if (db.Database.IsRelational())
+    {
+        db.Database.Migrate();
+    }
+    else
+    {
+        // For in-memory database, just ensure it's created
+        db.Database.EnsureCreated();
+    }
 }
 
 // Enable CORS
