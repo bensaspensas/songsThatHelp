@@ -13,41 +13,59 @@ using SongsThatHelp.Presentation.Endpoints;
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure PostgreSQL
-Console.Error.WriteLine($"=== ALL ENVIRONMENT VARIABLES ===");
-foreach (System.Collections.DictionaryEntry env in Environment.GetEnvironmentVariables())
-{
-    var key = env.Key.ToString();
-    Console.Error.WriteLine($"{key}: {env.Value}");
-
-}
-Console.Error.WriteLine($"=================================");
-
+var pgHost = Environment.GetEnvironmentVariable("PGHOST");
+var pgPort = Environment.GetEnvironmentVariable("PGPORT");
+var pgDatabase = Environment.GetEnvironmentVariable("PGDATABASE");
+var pgUser = Environment.GetEnvironmentVariable("PGUSER");
+var pgPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-var configConnection = builder.Configuration.GetConnectionString("DefaultConnection");
 
-Console.Error.WriteLine($"DATABASE_URL env var: {databaseUrl ?? "NULL"}");
-Console.Error.WriteLine($"Config connection: {configConnection ?? "NULL"}");
+string? connectionString = null;
 
-var connectionString = databaseUrl ?? configConnection;
-
-Console.Error.WriteLine($"Final connection string: {(string.IsNullOrEmpty(connectionString) ? "NULL" : "FOUND")}");
+// Try individual variables first
+if (!string.IsNullOrEmpty(pgHost))
+{
+    Console.Error.WriteLine("Using Railway individual Postgres variables");
+    connectionString = $"Host={pgHost};Port={pgPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Require;Trust Server Certificate=true";
+}
+// Parse DATABASE_URL if available
+else if (!string.IsNullOrEmpty(databaseUrl) && (databaseUrl.StartsWith("postgres://") || databaseUrl.StartsWith("postgresql://")))
+{
+    Console.Error.WriteLine("Parsing DATABASE_URL");
+    
+    // Remove protocol
+    var cleanUrl = databaseUrl.Replace("postgresql://", "").Replace("postgres://", "");
+    
+    // Split into credentials and host parts
+    var atIndex = cleanUrl.IndexOf('@');
+    var credentials = cleanUrl.Substring(0, atIndex);
+    var hostPart = cleanUrl.Substring(atIndex + 1);
+    
+    // Parse credentials
+    var colonIndex = credentials.IndexOf(':');
+    var username = credentials.Substring(0, colonIndex);
+    var password = credentials.Substring(colonIndex + 1);
+    
+    // Parse host, port, and database
+    var slashIndex = hostPart.IndexOf('/');
+    var hostAndPort = hostPart.Substring(0, slashIndex);
+    var database = hostPart.Substring(slashIndex + 1);
+    
+    var portIndex = hostAndPort.IndexOf(':');
+    var host = hostAndPort.Substring(0, portIndex);
+    var port = hostAndPort.Substring(portIndex + 1);
+    
+    connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+    Console.Error.WriteLine($"Parsed connection: Host={host}, Port={port}, Database={database}");
+}
+else
+{
+    Console.Error.WriteLine("No Postgres connection found, using in-memory database");
+}
 
 if (!string.IsNullOrEmpty(connectionString))
 {
-    // Railway provides DATABASE_URL in a specific format, convert if needed
-    if (connectionString.StartsWith("postgres://"))
-    {
-        Console.WriteLine("Converting postgres:// URL to Npgsql format");
-        connectionString = connectionString.Replace("postgres://", "");
-        var parts = connectionString.Split('@');
-        var credentials = parts[0].Split(':');
-        var hostAndDb = parts[1].Split('/');
-        var hostAndPort = hostAndDb[0].Split(':');
-        
-        connectionString = $"Host={hostAndPort[0]};Port={hostAndPort[1]};Database={hostAndDb[1]};Username={credentials[0]};Password={credentials[1]};SSL Mode=Require;Trust Server Certificate=true";
-        Console.WriteLine("Using PostgreSQL database");
-    }
-    
+    Console.Error.WriteLine("Configuring PostgreSQL");
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(connectionString));
     
@@ -56,8 +74,7 @@ if (!string.IsNullOrEmpty(connectionString))
 }
 else
 {
-    Console.WriteLine("No connection string found, using in-memory database");
-    // Fallback to in-memory for local development
+    Console.Error.WriteLine("Configuring in-memory database");
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseInMemoryDatabase("SongsDb"));
     
