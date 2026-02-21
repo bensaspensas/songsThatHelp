@@ -18,55 +18,27 @@ var pgPort = Environment.GetEnvironmentVariable("PGPORT");
 var pgDatabase = Environment.GetEnvironmentVariable("PGDATABASE");
 var pgUser = Environment.GetEnvironmentVariable("PGUSER");
 var pgPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
-var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-
-// Also check for public proxy variables
-var pgProxyHost = Environment.GetEnvironmentVariable("PGPROXY_HOST");
-var pgProxyPort = Environment.GetEnvironmentVariable("PGPROXY_PORT");
 
 string? connectionString = null;
 
-// Try public proxy first (more reliable)
-if (!string.IsNullOrEmpty(pgProxyHost))
+if (!string.IsNullOrEmpty(pgHost))
 {
-    Console.Error.WriteLine("Using Railway public proxy");
-    connectionString = $"Host={pgProxyHost};Port={pgProxyPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Require;Trust Server Certificate=true";
-}
-// Try individual variables
-else if (!string.IsNullOrEmpty(pgHost))
-{
-    Console.Error.WriteLine("Using Railway individual Postgres variables");
-    connectionString = $"Host={pgHost};Port={pgPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Require;Trust Server Certificate=true";
-}
-// Parse DATABASE_URL if available
-else if (!string.IsNullOrEmpty(databaseUrl) && (databaseUrl.StartsWith("postgres://") || databaseUrl.StartsWith("postgresql://")))
-{
-    Console.Error.WriteLine("Parsing DATABASE_URL");
+    Console.Error.WriteLine($"Building connection string with Host={pgHost}, Port={pgPort}, Database={pgDatabase}, User={pgUser}");
     
-    // Remove protocol
-    var cleanUrl = databaseUrl.Replace("postgresql://", "").Replace("postgres://", "");
+    // Build connection string with proper escaping
+    var builder = new Npgsql.NpgsqlConnectionStringBuilder
+    {
+        Host = pgHost,
+        Port = int.Parse(pgPort ?? "5432"),
+        Database = pgDatabase,
+        Username = pgUser,
+        Password = pgPassword,
+        SslMode = Npgsql.SslMode.Require,
+        TrustServerCertificate = true
+    };
     
-    // Split into credentials and host parts
-    var atIndex = cleanUrl.IndexOf('@');
-    var credentials = cleanUrl.Substring(0, atIndex);
-    var hostPart = cleanUrl.Substring(atIndex + 1);
-    
-    // Parse credentials
-    var colonIndex = credentials.IndexOf(':');
-    var username = credentials.Substring(0, colonIndex);
-    var password = credentials.Substring(colonIndex + 1);
-    
-    // Parse host, port, and database
-    var slashIndex = hostPart.IndexOf('/');
-    var hostAndPort = hostPart.Substring(0, slashIndex);
-    var database = hostPart.Substring(slashIndex + 1);
-    
-    var portIndex = hostAndPort.IndexOf(':');
-    var host = hostAndPort.Substring(0, portIndex);
-    var port = hostAndPort.Substring(portIndex + 1);
-    
-    connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true";
-    Console.Error.WriteLine($"Parsed connection: Host={host}, Port={port}, Database={database}");
+    connectionString = builder.ConnectionString;
+    Console.Error.WriteLine("Connection string built successfully");
 }
 else
 {
