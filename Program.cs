@@ -26,18 +26,17 @@ if (!string.IsNullOrEmpty(pgHost))
     Console.Error.WriteLine($"Building connection string with Host={pgHost}, Port={pgPort}, Database={pgDatabase}, User={pgUser}");
     
     // Build connection string with proper escaping
-    var builder = new Npgsql.NpgsqlConnectionStringBuilder
+    var connBuilder = new Npgsql.NpgsqlConnectionStringBuilder
     {
         Host = pgHost,
         Port = int.Parse(pgPort ?? "5432"),
         Database = pgDatabase,
         Username = pgUser,
         Password = pgPassword,
-        SslMode = Npgsql.SslMode.Require,
-        TrustServerCertificate = true
+        SslMode = Npgsql.SslMode.Require
     };
     
-    connectionString = builder.ConnectionString;
+    connectionString = connBuilder.ConnectionString;
     Console.Error.WriteLine("Connection string built successfully");
 }
 else
