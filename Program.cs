@@ -20,10 +20,20 @@ var pgUser = Environment.GetEnvironmentVariable("PGUSER");
 var pgPassword = Environment.GetEnvironmentVariable("PGPASSWORD");
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 
+// Also check for public proxy variables
+var pgProxyHost = Environment.GetEnvironmentVariable("PGPROXY_HOST");
+var pgProxyPort = Environment.GetEnvironmentVariable("PGPROXY_PORT");
+
 string? connectionString = null;
 
-// Try individual variables first
-if (!string.IsNullOrEmpty(pgHost))
+// Try public proxy first (more reliable)
+if (!string.IsNullOrEmpty(pgProxyHost))
+{
+    Console.Error.WriteLine("Using Railway public proxy");
+    connectionString = $"Host={pgProxyHost};Port={pgProxyPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Require;Trust Server Certificate=true";
+}
+// Try individual variables
+else if (!string.IsNullOrEmpty(pgHost))
 {
     Console.Error.WriteLine("Using Railway individual Postgres variables");
     connectionString = $"Host={pgHost};Port={pgPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Require;Trust Server Certificate=true";
@@ -161,15 +171,26 @@ var app = builder.Build();
 // Run migrations automatically (only for relational databases)
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    if (db.Database.IsRelational())
+    try
     {
-        db.Database.Migrate();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        if (db.Database.IsRelational())
+        {
+            Console.Error.WriteLine("Attempting to run migrations...");
+            db.Database.Migrate();
+            Console.Error.WriteLine("Migrations completed successfully");
+        }
+        else
+        {
+            // For in-memory database, just ensure it's created
+            db.Database.EnsureCreated();
+            Console.Error.WriteLine("In-memory database created");
+        }
     }
-    else
+    catch (Exception ex)
     {
-        // For in-memory database, just ensure it's created
-        db.Database.EnsureCreated();
+        Console.Error.WriteLine($"Migration failed: {ex.Message}");
+        Console.Error.WriteLine("App will continue without migrations. Database may need manual setup.");
     }
 }
 
