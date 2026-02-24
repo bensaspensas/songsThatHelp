@@ -17,6 +17,11 @@ public class InMemoryUserRepository : IUserRepository
         _users[user.Username] = user;
     }
 
+    public void Update(User user)
+    {
+        _users[user.Username] = user;
+    }
+
     public bool Exists(string username)
     {
         return _users.ContainsKey(username);
