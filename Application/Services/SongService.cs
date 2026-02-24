@@ -12,27 +12,36 @@ public class SongService : ISongService
         _songRepository = songRepository;
     }
 
-    public Song CreateSong(string username, string link, string text)
+    public Song CreateSong(string username, string link, string text, string? gangName)
     {
         var id = _songRepository.GetNextId();
-        var song = new Song(id, username, link, text);
+        var song = new Song(id, username, link, text, gangName);
         _songRepository.Add(song);
         return song;
     }
 
-    public Song? GetSong(int id)
+    public Song? GetSong(int id, string? gangName)
     {
-        return _songRepository.GetById(id);
+        var song = _songRepository.GetById(id);
+        if (song == null) return null;
+        
+        // Check gang scope
+        if (gangName != null && song.GangName != gangName)
+            return null;
+        if (gangName == null && song.GangName != null)
+            return null;
+            
+        return song;
     }
 
-    public List<Song> GetAllSongs()
+    public List<Song> GetAllSongs(string? gangName)
     {
-        return _songRepository.GetAll();
+        return _songRepository.GetAll(gangName);
     }
 
-    public Comment? AddComment(int songId, string username, string text)
+    public Comment? AddComment(int songId, string username, string text, string? gangName)
     {
-        var song = _songRepository.GetById(songId);
+        var song = GetSong(songId, gangName);
         if (song == null) return null;
 
         var commentId = _songRepository.GetNextCommentId();
@@ -41,9 +50,9 @@ public class SongService : ISongService
         return comment;
     }
 
-    public bool AddEmoji(int songId, string username, string emojiType)
+    public bool AddEmoji(int songId, string username, string emojiType, string? gangName)
     {
-        var song = _songRepository.GetById(songId);
+        var song = GetSong(songId, gangName);
         if (song == null) return false;
 
         song.AddEmoji(username, emojiType);

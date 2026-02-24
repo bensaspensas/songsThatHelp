@@ -4,6 +4,7 @@ public class Song
 {
     public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
+    public string? GangName { get; set; }
     public string Link { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
@@ -18,12 +19,13 @@ public class Song
         CreatedAt = DateTime.UtcNow;
     }
 
-    public Song(int id, string username, string link, string text)
+    public Song(int id, string username, string link, string text, string? gangName = null)
     {
         Id = id;
         Username = username;
         Link = link;
         Text = text;
+        GangName = gangName;
         CreatedAt = DateTime.UtcNow;
     }
 

@@ -19,9 +19,12 @@ public class EfSongRepository : ISongRepository
         return _context.Songs.Find(id);
     }
 
-    public List<Song> GetAll()
+    public List<Song> GetAll(string? gangName)
     {
-        return _context.Songs.ToList();
+        if (gangName == null)
+            return _context.Songs.Where(s => s.GangName == null).ToList();
+        else
+            return _context.Songs.Where(s => s.GangName == gangName).ToList();
     }
 
     public void Add(Song song)

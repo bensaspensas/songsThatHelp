@@ -14,9 +14,12 @@ public class InMemorySongRepository : ISongRepository
         return _songs.FirstOrDefault(s => s.Id == id);
     }
 
-    public List<Song> GetAll()
+    public List<Song> GetAll(string? gangName)
     {
-        return _songs;
+        if (gangName == null)
+            return _songs.Where(s => s.GangName == null).ToList();
+        else
+            return _songs.Where(s => s.GangName == gangName).ToList();
     }
 
     public void Add(Song song)

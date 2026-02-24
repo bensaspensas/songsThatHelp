@@ -17,17 +17,24 @@ public class TokenService : ITokenService
         _issuer = configuration["Jwt:Issuer"] ?? "SongsThatHelp";
     }
 
-    public string GenerateToken(string username)
+    public string GenerateToken(string username, string? gangName = null)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_secretKey);
         
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, username)
+        };
+
+        if (!string.IsNullOrEmpty(gangName))
+        {
+            claims.Add(new Claim("gang", gangName));
+        }
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Name, username)
-            }),
+            Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(24),
             Issuer = _issuer,
             Audience = _issuer,

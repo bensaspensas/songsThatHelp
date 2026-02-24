@@ -52,6 +52,7 @@ if (!string.IsNullOrEmpty(connectionString))
     
     builder.Services.AddScoped<IUserRepository, EfUserRepository>();
     builder.Services.AddScoped<ISongRepository, EfSongRepository>();
+    builder.Services.AddScoped<IGangRepository, EfGangRepository>();
 }
 else
 {
@@ -61,6 +62,7 @@ else
     
     builder.Services.AddScoped<IUserRepository, EfUserRepository>();
     builder.Services.AddScoped<ISongRepository, EfSongRepository>();
+    builder.Services.AddScoped<IGangRepository, EfGangRepository>();
 }
 
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "your-secret-key-min-32-chars-long!";

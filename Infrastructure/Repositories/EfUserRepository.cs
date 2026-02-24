@@ -24,6 +24,12 @@ public class EfUserRepository : IUserRepository
         _context.SaveChanges();
     }
 
+    public void Update(User user)
+    {
+        _context.Users.Update(user);
+        _context.SaveChanges();
+    }
+
     public bool Exists(string username)
     {
         return _context.Users.Any(u => u.Username == username);
